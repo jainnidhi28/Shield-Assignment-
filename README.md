@@ -120,4 +120,23 @@ The application includes comprehensive error handling for:
 - Authentication failures
 - Invalid input data
 - Database errors
-- Network issues 
+- Network issues
+
+## Screenshots
+-Login
+![Login](https://github.com/user-attachments/assets/18a1a33d-b6b7-438f-9c84-e2da3a80855b)
+-Homepage
+![image](https://github.com/user-attachments/assets/5dd714ca-91e2-4475-ac50-702dd365517a)
+-Profile
+![image](https://github.com/user-attachments/assets/f89c9991-3180-42b7-ae12-232f35e5117f)
+-Deploy Drone Surveillance Unit Requests
+![image](https://github.com/user-attachments/assets/d667f5f2-3256-4a3a-bb99-2ae40d8c279a)
+-Adding a request in Deploy Drone Surveillance Unit
+![image](https://github.com/user-attachments/assets/82db2512-66f4-427c-a97d-8829337a3bdb)
+-Editing a mission request and then updating it in Deploy Drone Surveillance Unit
+![image](https://github.com/user-attachments/assets/53ccd202-7661-4e79-ad8b-a33d53349fdc)
+-Deleting the request
+![image](https://github.com/user-attachments/assets/e28a7116-86ce-48e9-bc77-bb2aae381878)
+-Similarly it is the same for the other two requests as well
+![image](https://github.com/user-attachments/assets/5e314ec2-addc-46e6-9b14-e9ba3695c8e4)
+![image](https://github.com/user-attachments/assets/ef25125c-be46-468e-9c99-e7d32f294258)
