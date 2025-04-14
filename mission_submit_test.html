@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission Submit Endpoint Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-top: 0;
+        }
+        .field {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 100px;
+            font-family: monospace;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin-top: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .token-display {
+            background-color: #eee;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mission Submit Endpoint Test</h1>
+        
+        <div class="field">
+            <label>Your Access Token:</label>
+            <div class="token-display">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ2YXJzaGEyNCIsImV4cCI6MTc0NDYzMjgwNX0.VzVJHS500kmGMENHGItn6heYC4OmxQSATnqZcI7XvtY</div>
+        </div>
+        
+        <div class="field">
+            <label for="mission_type">Mission Type:</label>
+            <select id="mission_type">
+                <option value="drone-surveillance">Drone Surveillance</option>
+                <option value="ground-patrol">Ground Patrol</option>
+                <option value="aerial-reconnaissance">Aerial Reconnaissance</option>
+            </select>
+        </div>
+        
+        <div class="field">
+            <label for="operation_area">Operation Area:</label>
+            <input type="text" id="operation_area" value="North Sector">
+        </div>
+        
+        <div class="field">
+            <label for="drone_id">Drone ID:</label>
+            <input type="text" id="drone_id" value="drone-001">
+        </div>
+        
+        <div class="field">
+            <label for="payload">Payload:</label>
+            <input type="text" id="payload" value="High-resolution camera">
+        </div>
+        
+        <div class="field">
+            <label for="request_body">Full Request Body (JSON):</label>
+            <textarea id="request_body"></textarea>
+        </div>
+        
+        <button id="update_json">Update JSON</button>
+        <button id="submit_mission">Submit Mission</button>
+        
+        <div class="response">
+            <h3>Response:</h3>
+            <div id="status"></div>
+            <pre id="response_body">Response will appear here...</pre>
+        </div>
+    </div>
+    
+    <script>
+        // Update the JSON when the form fields change
+        function updateJSON() {
+            const missionType = document.getElementById('mission_type').value;
+            const operationArea = document.getElementById('operation_area').value;
+            const droneId = document.getElementById('drone_id').value;
+            const payload = document.getElementById('payload').value;
+            
+            const requestData = {
+                mission_type: missionType,
+                operation_area: operationArea,
+                drone_id: droneId,
+                payload: payload,
+                timestamp: new Date().toISOString()
+            };
+            
+            document.getElementById('request_body').value = JSON.stringify(requestData, null, 2);
+        }
+        
+        // Initial update
+        updateJSON();
+        
+        // Event listeners for form fields
+        document.getElementById('mission_type').addEventListener('change', updateJSON);
+        document.getElementById('operation_area').addEventListener('input', updateJSON);
+        document.getElementById('drone_id').addEventListener('input', updateJSON);
+        document.getElementById('payload').addEventListener('input', updateJSON);
+        
+        // Update JSON button
+        document.getElementById('update_json').addEventListener('click', updateJSON);
+        
+        // Submit mission button
+        document.getElementById('submit_mission').addEventListener('click', async function() {
+            const token = document.querySelector('.token-display').textContent.trim();
+            let requestBody;
+            
+            try {
+                requestBody = JSON.parse(document.getElementById('request_body').value);
+            } catch (e) {
+                document.getElementById('status').innerHTML = '<p style="color: red;">Error: Invalid JSON</p>';
+                document.getElementById('response_body').textContent = e.message;
+                return;
+            }
+            
+            document.getElementById('status').innerHTML = '<p>Sending request...</p>';
+            
+            try {
+                const response = await fetch('http://localhost:8000/missions/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                let responseData;
+                try {
+                    responseData = await response.json();
+                } catch {
+                    responseData = await response.text();
+                }
+                
+                document.getElementById('status').innerHTML = 
+                    `<p>Status: <strong>${response.status}</strong> ${response.statusText}</p>`;
+                
+                if (typeof responseData === 'object') {
+                    document.getElementById('response_body').textContent = JSON.stringify(responseData, null, 2);
+                } else {
+                    document.getElementById('response_body').textContent = responseData;
+                }
+            } catch (error) {
+                document.getElementById('status').innerHTML = '<p style="color: red;">Error: Network or CORS issue</p>';
+                document.getElementById('response_body').textContent = error.message;
+            }
+        });
+    </script>
+</body>
+</html> 

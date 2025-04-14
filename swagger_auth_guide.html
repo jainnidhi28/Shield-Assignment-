@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swagger UI Authorization Guide</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #2C3E50;
+            margin-top: 0;
+            border-bottom: 2px solid #3498DB;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #2980B9;
+            margin-top: 30px;
+        }
+        .step {
+            background-color: #f9f9f9;
+            border-left: 4px solid #3498DB;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 5px 5px 0;
+        }
+        .step h3 {
+            margin-top: 0;
+            color: #3498DB;
+        }
+        code {
+            background-color: #f5f5f5;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .token-display {
+            background-color: #eee;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            word-break: break-all;
+            font-family: monospace;
+            border: 1px solid #ddd;
+            margin: 15px 0;
+        }
+        img {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .note {
+            background-color: #fef9e7;
+            border-left: 4px solid #f1c40f;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 5px 5px 0;
+        }
+        .error {
+            background-color: #fdedec;
+            border-left: 4px solid #e74c3c;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 5px 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>How to Authorize in Swagger UI</h1>
+    
+    <p>This guide will help you correctly authenticate in the Swagger UI interface for the S.H.I.E.L.D. API.</p>
+    
+    <div class="note">
+        <strong>Important:</strong> The server expects authorization in JWT Bearer token format, but the Swagger UI OAuth2 flow is causing an "Unprocessable Entity" error. This guide shows you a workaround.
+    </div>
+    
+    <h2>Solution: Use Direct Token Authorization</h2>
+    
+    <div class="step">
+        <h3>Step 1: Get a valid access token</h3>
+        <p>We've already generated a token for you using the PowerShell script. Here's your valid token:</p>
+        <div class="token-display">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ2YXJzaGEyNCIsImV4cCI6MTc0NDYzNDUyM30.14UAnaQwBvBbP__OhYknm19KJ3z-05ibINYOAx2_W80</div>
+        <p>This token is also saved in the <code>access_token.txt</code> file in your workspace.</p>
+    </div>
+    
+    <div class="step">
+        <h3>Step 2: Enter the token manually</h3>
+        <p>In Swagger UI, don't use the OAuth2 flow that's causing errors. Instead:</p>
+        <ol>
+            <li>Click the "Authorize" button at the top right of the Swagger UI</li>
+            <li>In the "Value" field, enter: <code>Bearer </code> followed by your token</li>
+            <li>The full value should look like:
+                <div class="token-display">Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ2YXJzaGEyNCIsImV4cCI6MTc0NDYzNDUyM30.14UAnaQwBvBbP__OhYknm19KJ3z-05ibINYOAx2_W80</div>
+            </li>
+            <li>Click "Authorize" to save</li>
+            <li>Close the dialog</li>
+        </ol>
+    </div>
+    
+    <div class="step">
+        <h3>Step 3: Testing the missions/submit endpoint</h3>
+        <p>Now that you're properly authorized, you can test the POST /missions/submit endpoint:</p>
+        <ol>
+            <li>Scroll down to find the <code>POST /missions/submit</code> endpoint</li>
+            <li>Click the endpoint to expand it</li>
+            <li>Click "Try it out"</li>
+            <li>In the request body field, enter this JSON:
+                <pre><code>{
+  "mission_type": "drone-surveillance",
+  "operation_area": "North Sector",
+  "drone_id": "falcon-x200",
+  "payload": "High-resolution camera",
+  "timestamp": "2023-11-17T14:30:00Z"
+}</code></pre>
+            </li>
+            <li>Update the timestamp to the current time in ISO format</li>
+            <li>Click "Execute" to send the request</li>
+        </ol>
+    </div>
+    
+    <div class="error">
+        <h3>Troubleshooting</h3>
+        <p>If you receive a 401 Unauthorized error:</p>
+        <ul>
+            <li>Verify you entered the "Bearer" prefix before the token</li>
+            <li>Check if your token has expired (tokens typically last for 30 minutes)</li>
+            <li>Generate a new token using the provided PowerShell script if needed</li>
+        </ul>
+    </div>
+    
+    <h2>Why This Approach Works</h2>
+    <p>The Swagger UI OAuth2 password flow is trying to send credentials in a format that the server isn't correctly handling, resulting in a 422 Unprocessable Entity error. By manually setting the Bearer token, we bypass this problematic flow and directly provide the authorization that the server expects.</p>
+
+</body>
+</html> 

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHIELD API Client</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <style>
+        body { padding: 20px; }
+        .card { margin-bottom: 20px; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 5px; }
+        .endpoint-btn { margin-right: 10px; margin-bottom: 10px; }
+        #response-container { max-height: 500px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4">SHIELD API Testing Client</h1>
+        
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Authentication</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" value="varsha23">
+                    </div>
+                    <div class="col">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" value="Sa@230304">
+                    </div>
+                    <div class="col-auto d-flex align-items-end">
+                        <button class="btn btn-primary" id="login-btn">Login</button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="token" class="form-label">Access Token</label>
+                    <input type="text" class="form-control" id="token" readonly>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">API Endpoints</h5>
+            </div>
+            <div class="card-body">
+                <h6>Authentication & User</h6>
+                <div class="btn-group mb-3">
+                    <button class="btn btn-outline-primary endpoint-btn" data-method="GET" data-url="/">Root</button>
+                    <button class="btn btn-outline-primary endpoint-btn" data-method="POST" data-url="/register" data-requires-body="true" data-body-template='{"username":"new_user","email":"new_user@example.com","password":"password123"}'>Register</button>
+                    <button class="btn btn-outline-primary endpoint-btn" data-method="GET" data-url="/user/profile" data-requires-auth="true">User Profile</button>
+                </div>
+                
+                <h6>Missions</h6>
+                <div class="btn-group mb-3">
+                    <button class="btn btn-outline-success endpoint-btn" data-method="GET" data-url="/missions" data-requires-auth="true">Available Missions</button>
+                    <button class="btn btn-outline-success endpoint-btn" data-method="GET" data-url="/missions/list" data-requires-auth="true">List Missions</button>
+                    <button class="btn btn-outline-success endpoint-btn" data-method="GET" data-url="/missions/history" data-requires-auth="true">Mission History</button>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="btn btn-outline-success endpoint-btn" data-method="POST" data-url="/missions/submit" data-requires-auth="true" data-requires-body="true" data-body-template='{"mission_type":"drone-surveillance","details":{"drone_id":"test-drone","operation_area":"Test Area","payload":"Test Payload"},"timestamp":"{{timestamp}}"}'>Submit Mission</button>
+                </div>
+                
+                <h6>Mission Delete</h6>
+                <div class="row g-3 align-items-end">
+                    <div class="col-auto">
+                        <label for="mission-type" class="form-label">Mission Type</label>
+                        <input type="text" class="form-control" id="mission-type" value="drone-surveillance">
+                    </div>
+                    <div class="col-auto">
+                        <label for="mission-id" class="form-label">Mission ID</label>
+                        <input type="text" class="form-control" id="mission-id">
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-danger" id="delete-mission-btn">Delete Mission</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">Request</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col">
+                        <label for="request-method" class="form-label">Method</label>
+                        <input type="text" class="form-control" id="request-method" readonly>
+                    </div>
+                    <div class="col">
+                        <label for="request-url" class="form-label">URL</label>
+                        <input type="text" class="form-control" id="request-url" readonly>
+                    </div>
+                    <div class="col-auto d-flex align-items-end">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="auth-required" disabled>
+                            <label class="form-check-label" for="auth-required">
+                                Requires Auth
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="request-body" class="form-label">Request Body (JSON)</label>
+                    <textarea class="form-control" id="request-body" rows="5"></textarea>
+                </div>
+                <button class="btn btn-primary" id="send-request-btn">Send Request</button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="card-title mb-0">Response</h5>
+            </div>
+            <div class="card-body" id="response-container">
+                <div class="mb-3">
+                    <label for="response-status" class="form-label">Status</label>
+                    <input type="text" class="form-control" id="response-status" readonly>
+                </div>
+                <div class="mb-3">
+                    <label for="response-body" class="form-label">Response Body</label>
+                    <pre id="response-body"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = 'http://localhost:8000';
+        let currentToken = '';
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Login button handler
+            document.getElementById('login-btn').addEventListener('click', async function() {
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                
+                if (!username || !password) {
+                    alert('Please enter username and password');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`${BASE_URL}/token`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username, password })
+                    });
+                    
+                    const data = await response.json();
+                    if (response.ok && data.access_token) {
+                        currentToken = data.access_token;
+                        document.getElementById('token').value = currentToken;
+                        showResponse(response.status, data);
+                    } else {
+                        showResponse(response.status, data);
+                    }
+                } catch (error) {
+                    showResponse('Error', { error: error.message });
+                }
+            });
+            
+            // Endpoint button handlers
+            document.querySelectorAll('.endpoint-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const method = this.dataset.method;
+                    const url = this.dataset.url;
+                    const requiresAuth = this.dataset.requiresAuth === 'true';
+                    const requiresBody = this.dataset.requiresBody === 'true';
+                    
+                    document.getElementById('request-method').value = method;
+                    document.getElementById('request-url').value = url;
+                    document.getElementById('auth-required').checked = requiresAuth;
+                    
+                    if (requiresBody && this.dataset.bodyTemplate) {
+                        let bodyTemplate = this.dataset.bodyTemplate;
+                        // Replace {{timestamp}} with current ISO timestamp
+                        bodyTemplate = bodyTemplate.replace('{{timestamp}}', new Date().toISOString());
+                        document.getElementById('request-body').value = bodyTemplate;
+                    } else {
+                        document.getElementById('request-body').value = '';
+                    }
+                });
+            });
+            
+            // Delete mission button handler
+            document.getElementById('delete-mission-btn').addEventListener('click', function() {
+                const missionType = document.getElementById('mission-type').value;
+                const missionId = document.getElementById('mission-id').value;
+                
+                if (!missionType || !missionId) {
+                    alert('Please enter mission type and ID');
+                    return;
+                }
+                
+                document.getElementById('request-method').value = 'DELETE';
+                document.getElementById('request-url').value = `/missions/${missionType}/${missionId}`;
+                document.getElementById('auth-required').checked = true;
+                document.getElementById('request-body').value = '';
+            });
+            
+            // Send request button handler
+            document.getElementById('send-request-btn').addEventListener('click', async function() {
+                const method = document.getElementById('request-method').value;
+                const url = document.getElementById('request-url').value;
+                const requiresAuth = document.getElementById('auth-required').checked;
+                const body = document.getElementById('request-body').value;
+                
+                if (!method || !url) {
+                    alert('Please select an endpoint first');
+                    return;
+                }
+                
+                if (requiresAuth && !currentToken) {
+                    alert('This endpoint requires authentication. Please login first.');
+                    return;
+                }
+                
+                try {
+                    const headers = {
+                        'Content-Type': 'application/json'
+                    };
+                    
+                    if (requiresAuth) {
+                        headers['Authorization'] = `Bearer ${currentToken}`;
+                    }
+                    
+                    const requestOptions = {
+                        method,
+                        headers
+                    };
+                    
+                    if (method !== 'GET' && method !== 'DELETE' && body) {
+                        try {
+                            const parsedBody = JSON.parse(body);
+                            requestOptions.body = JSON.stringify(parsedBody);
+                        } catch (e) {
+                            alert('Invalid JSON in request body');
+                            return;
+                        }
+                    }
+                    
+                    const response = await fetch(`${BASE_URL}${url}`, requestOptions);
+                    
+                    try {
+                        const data = await response.json();
+                        showResponse(response.status, data);
+                    } catch (e) {
+                        showResponse(response.status, { text: await response.text() });
+                    }
+                } catch (error) {
+                    showResponse('Error', { error: error.message });
+                }
+            });
+        });
+        
+        function showResponse(status, data) {
+            document.getElementById('response-status').value = status;
+            document.getElementById('response-body').textContent = JSON.stringify(data, null, 2);
+        }
+    </script>
+</body>
+</html> 
